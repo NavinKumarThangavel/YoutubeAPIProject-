@@ -124,92 +124,101 @@ def get_channel_info(channel_id):
 # Extracting Youtube channel information from Youtube API.
 if st.button("Extract Data"):
     print('Extraction Begin')
-    (channel_Details, video_Details) = get_channel_info(youtube_channel_id)
-    st.session_state['channel_Details'] = channel_Details
-    st.session_state['video_Details'] = video_Details
+    if youtube_channel_id != '':
+        (channel_Details, video_Details) = get_channel_info(youtube_channel_id)
+        st.session_state['channel_Details'] = channel_Details
+        st.session_state['video_Details'] = video_Details
+    else:
+        st.write('Please enter the youtube id!')
     print('Extraction Completed')
 
 # Inserting Youtube channel information into tables
 if st.button("Upload SQLITE"):
     print('Uploaded Begin')
-    with conn.session as s:
-        s.execute('''INSERT OR REPLACE INTO Channel (channel_id,
-                                          channel_name,
-                                          channel_description,
-                                          channel_country,
-                                          channel_views,
-                                          channel_subscription_count,
-                                          channel_status) VALUES (:Channel_id, :Channel_name,:Channel_Description,:Channel_country,
-                                          :Channel_Views,:Channel_subscription_count,:Channel_status);'''
-                  , params=dict(Channel_id=st.session_state['channel_Details']['Channel_id'],
-                                Channel_name=st.session_state['channel_Details']['Channel_name'],
-                                Channel_Description=st.session_state['channel_Details']['Channel_Description'],
-                                Channel_country=st.session_state['channel_Details']['Channel_country'],
-                                Channel_Views=st.session_state['channel_Details']['Channel_Views'],
-                                Channel_subscription_count=st.session_state['channel_Details']['Subscription_Count'],
-                                Channel_status=st.session_state['channel_Details']['Channel_status']
-                                ))
-
-        s.execute('''INSERT OR REPLACE into Playlist (playlist_id,
-                                             channel_id,
-                                             playlist_name)
-                                              VALUES (:Playlist_id,:Channel_id, :Playlist_name);'''
-                  , params=dict(Playlist_id=st.session_state['channel_Details']['Playlist_id'],
-                                Channel_id=st.session_state['channel_Details']['Channel_id'],
-                                Playlist_name=st.session_state['channel_Details']['Channel_name']
-                                ))
-
-        for i in range(1, len(st.session_state['video_Details']) + 1):
-            video_info = st.session_state['video_Details']['Videos_Id_' + str(i)]
-            s.execute('''INSERT OR REPLACE into Video (video_id,
-                                                        playlist_id,
-                                                        video_name,
-                                                        video_description,
-                                                        published_data,
-                                                        view_count,
-                                                        like_count,
-                                                        dislike_count,
-                                                        favorite_count,
-                                                        comment_count,
-                                                        duration,
-                                                        thumbnail,
-                                                        caption_status)
-                                                         VALUES (:Video_Id,:playlist_id, :Video_Name,:Video_Description,
-                                                         :published_data,:View_Count,:Like_Count,:Dislike_Count,:Favorite_Count,
-                                                         :Comment_Count,:Duration,:Thumbnail,:CaptionStatus);'''
-                      , params=dict(Video_Id=video_info['Video_Id'],
-                                    playlist_id=st.session_state['channel_Details']['Playlist_id'],
-                                    Video_Name=video_info['Video_Name'],
-                                    Video_Description=video_info['Video_Description'],
-                                    published_data=video_info['PublishedAt'],
-                                    View_Count=video_info['View_Count'],
-                                    Like_Count=video_info['Like_Count'],
-                                    Dislike_Count=video_info['Dislike_Count'],
-                                    Favorite_Count=video_info['Favorite_Count'],
-                                    Comment_Count=video_info['Comment_Count'],
-                                    Duration=video_info['Duration'].replace('PT', ''),
-                                    Thumbnail=video_info['Thumbnail'],
-                                    CaptionStatus=video_info['Caption_Status']
+    if youtube_channel_id == '':
+        st.write('Please enter the youtube id!')
+    elif 'channel_Details' not in st.session_state:
+        st.write('Please extract data from youtube channel info')
+    else:
+        with conn.session as s:
+            s.execute('''INSERT OR REPLACE INTO Channel (channel_id,
+                                              channel_name,
+                                              channel_description,
+                                              channel_country,
+                                              channel_views,
+                                              channel_subscription_count,
+                                              channel_status) VALUES (:Channel_id, :Channel_name,:Channel_Description,:Channel_country,
+                                              :Channel_Views,:Channel_subscription_count,:Channel_status);'''
+                      , params=dict(Channel_id=st.session_state['channel_Details']['Channel_id'],
+                                    Channel_name=st.session_state['channel_Details']['Channel_name'],
+                                    Channel_Description=st.session_state['channel_Details']['Channel_Description'],
+                                    Channel_country=st.session_state['channel_Details']['Channel_country'],
+                                    Channel_Views=st.session_state['channel_Details']['Channel_Views'],
+                                    Channel_subscription_count=st.session_state['channel_Details']['Subscription_Count'],
+                                    Channel_status=st.session_state['channel_Details']['Channel_status']
                                     ))
 
-            comment_list = video_info['Comments']
-            for i in range(1, len(comment_list) + 1):
-                comment_info = comment_list['Comment_Id_' + str(i)]
-                s.execute('''INSERT OR REPLACE into Comment (comment_id,
-                                                             video_id,
-                                                             comment_text,
-                                                             comment_author,
-                                                             comment_published_date
-                                                             )
-                                                              VALUES (:comment_id,:Video_Id, :Comment_Text,
-                                                              :Comment_Author,:PublishedAt);'''
-                          , params=dict(comment_id=comment_info['Comment_Id'],
-                                        Video_Id=video_info['Video_Id'],
-                                        Comment_Text=comment_info['Comment_Text'],
-                                        Comment_Author=comment_info['Comment_Author'],
-                                        PublishedAt=comment_info['Comment_PublishedAt']
+            s.execute('''INSERT OR REPLACE into Playlist (playlist_id,
+                                                 channel_id,
+                                                 playlist_name)
+                                                  VALUES (:Playlist_id,:Channel_id, :Playlist_name);'''
+                      , params=dict(Playlist_id=st.session_state['channel_Details']['Playlist_id'],
+                                    Channel_id=st.session_state['channel_Details']['Channel_id'],
+                                    Playlist_name=st.session_state['channel_Details']['Channel_name']
+                                    ))
+
+            for i in range(1, len(st.session_state['video_Details']) + 1):
+                video_info = st.session_state['video_Details']['Videos_Id_' + str(i)]
+                s.execute('''INSERT OR REPLACE into Video (video_id,
+                                                            playlist_id,
+                                                            video_name,
+                                                            video_description,
+                                                            published_data,
+                                                            view_count,
+                                                            like_count,
+                                                            dislike_count,
+                                                            favorite_count,
+                                                            comment_count,
+                                                            duration,
+                                                            thumbnail,
+                                                            caption_status)
+                                                             VALUES (:Video_Id,:playlist_id, :Video_Name,:Video_Description,
+                                                             :published_data,:View_Count,:Like_Count,:Dislike_Count,:Favorite_Count,
+                                                             :Comment_Count,:Duration,:Thumbnail,:CaptionStatus);'''
+                          , params=dict(Video_Id=video_info['Video_Id'],
+                                        playlist_id=st.session_state['channel_Details']['Playlist_id'],
+                                        Video_Name=video_info['Video_Name'],
+                                        Video_Description=video_info['Video_Description'],
+                                        published_data=video_info['PublishedAt'],
+                                        View_Count=video_info['View_Count'],
+                                        Like_Count=video_info['Like_Count'],
+                                        Dislike_Count=video_info['Dislike_Count'],
+                                        Favorite_Count=video_info['Favorite_Count'],
+                                        Comment_Count=video_info['Comment_Count'],
+                                        Duration=video_info['Duration'].replace('PT', ''),
+                                        Thumbnail=video_info['Thumbnail'],
+                                        CaptionStatus=video_info['Caption_Status']
                                         ))
 
-        s.commit()
-        s.close()
+                comment_list = video_info['Comments']
+                for i in range(1, len(comment_list) + 1):
+                    comment_info = comment_list['Comment_Id_' + str(i)]
+                    s.execute('''INSERT OR REPLACE into Comment (comment_id,
+                                                                 video_id,
+                                                                 comment_text,
+                                                                 comment_author,
+                                                                 comment_published_date
+                                                                 )
+                                                                  VALUES (:comment_id,:Video_Id, :Comment_Text,
+                                                                  :Comment_Author,:PublishedAt);'''
+                              , params=dict(comment_id=comment_info['Comment_Id'],
+                                            Video_Id=video_info['Video_Id'],
+                                            Comment_Text=comment_info['Comment_Text'],
+                                            Comment_Author=comment_info['Comment_Author'],
+                                            PublishedAt=comment_info['Comment_PublishedAt']
+                                            ))
+
+            s.commit()
+            s.close()
+
         print('Uploaded End')
