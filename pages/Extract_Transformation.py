@@ -1,17 +1,11 @@
 import streamlit as st
 import googleapiclient.discovery
-import pprint
-import sqlalchemy
-from sqlalchemy import create_engine
-import pandas as pd
 
 api_service_name = "youtube"
 api_version = "v3"
 client_secrets_file = "YOUR_CLIENT_SECRET_FILE.json"
-api_key = "AIzaSyDQ-q0NXC9fyTs9jE8UGt9VOZzjAY2ei_w"
-# AIzaSyDQ-q0NXC9fyTs9jE8UGt9VOZzjAY2ei_w
-# AIzaSyAh9hUbdkprcXEDa68RL-WOGPt-8nd-i2c
-# AIzaSyBB46o8G3QgGn3XjVLwWcl6Ykxou4kvusM
+api_key = ""
+
 youtube = googleapiclient.discovery.build(
     api_service_name, api_version, developerKey=api_key)
 
